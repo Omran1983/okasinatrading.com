@@ -1,0 +1,1 @@
+Run index.html in browser. Ensure Supabase credentials are valid.

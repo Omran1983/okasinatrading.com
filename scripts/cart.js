@@ -1,0 +1,1 @@
+// JS for cart management with localStorage

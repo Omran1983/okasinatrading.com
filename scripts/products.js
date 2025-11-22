@@ -1,0 +1,1 @@
+// JS to dynamically render products
