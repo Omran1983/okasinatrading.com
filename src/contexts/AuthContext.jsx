@@ -18,7 +18,8 @@ export const AuthProvider = ({ children }) => {
     // Admin email addresses (you can add more)
     const ADMIN_EMAILS = [
         'info@okasinatrading.com',
-        'admin@okasinatrading.com'
+        'admin@okasinatrading.com',
+        'omranahamd@yahoo.com'
     ];
 
     useEffect(() => {
