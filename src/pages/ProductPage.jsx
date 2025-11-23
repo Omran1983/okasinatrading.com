@@ -110,7 +110,7 @@ export default function ProductPage() {
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                             <div className="flex items-center">
                                 <Truck size={18} className="mr-3 text-gray-400" />
-                                <span>Free Delivery in Mauritius</span>
+                                <span>Delivery from Rs 100</span>
                             </div>
                             <div className="flex items-center">
                                 <ShieldCheck size={18} className="mr-3 text-gray-400" />

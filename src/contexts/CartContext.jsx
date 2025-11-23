@@ -13,13 +13,16 @@ export function CartProvider({ children }) {
     }, [cart]);
 
     const addToCart = (product) => {
+        console.log('Adding to cart:', product);
         setCart((prev) => {
             const existing = prev.find((item) => item.id === product.id);
             if (existing) {
+                console.log('Updating existing item quantity');
                 return prev.map((item) =>
                     item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
                 );
             }
+            console.log('Adding new item');
             return [...prev, { ...product, quantity: 1 }];
         });
     };

@@ -1,16 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
-import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ArrowRight, Truck, Home } from 'lucide-react';
 
 export default function CartPage() {
     const { cart, removeFromCart, updateQuantity } = useCart();
+    const [shippingMethod, setShippingMethod] = useState('postage'); // 'postage' or 'door'
 
-    // Calculate total
+    const SHIPPING_RATES = {
+        postage: 100,
+        door: 150
+    };
+
+    // Calculate subtotal
     const subtotal = cart.reduce((sum, item) => {
         const price = item.price_mur || (Number(item.price) * 45);
         return sum + (price * item.quantity);
     }, 0);
+
+    const shippingCost = SHIPPING_RATES[shippingMethod];
+    const total = subtotal + shippingCost;
 
     if (cart.length === 0) {
         return (
@@ -105,16 +114,56 @@ export default function CartPage() {
                                     <span>Subtotal</span>
                                     <span>Rs {subtotal.toLocaleString()}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span>Shipping</span>
-                                    <span>Free</span>
+
+                                {/* Shipping Selection */}
+                                <div className="border-t border-b border-gray-200 py-4 my-4">
+                                    <p className="font-bold mb-3 text-gray-900">Shipping Method</p>
+
+                                    <label className="flex items-center justify-between cursor-pointer mb-3 group">
+                                        <div className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="shipping"
+                                                checked={shippingMethod === 'postage'}
+                                                onChange={() => setShippingMethod('postage')}
+                                                className="text-black focus:ring-black"
+                                            />
+                                            <span className="ml-2 flex items-center">
+                                                <Truck size={16} className="mr-2 text-gray-500" />
+                                                Postage (Island-wide)
+                                            </span>
+                                        </div>
+                                        <span className="font-medium">Rs 100</span>
+                                    </label>
+
+                                    <label className="flex items-center justify-between cursor-pointer group">
+                                        <div className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="shipping"
+                                                checked={shippingMethod === 'door'}
+                                                onChange={() => setShippingMethod('door')}
+                                                className="text-black focus:ring-black"
+                                            />
+                                            <span className="ml-2 flex items-center">
+                                                <Home size={16} className="mr-2 text-gray-500" />
+                                                Door Delivery
+                                            </span>
+                                        </div>
+                                        <span className="font-medium">Rs 150</span>
+                                    </label>
+                                </div>
+
+                                <div className="flex justify-between text-gray-900 font-medium">
+                                    <span>Shipping Cost</span>
+                                    <span>Rs {shippingCost}</span>
                                 </div>
                             </div>
 
                             <div className="border-t border-gray-200 pt-4 mb-8">
                                 <div className="flex justify-between text-lg font-bold text-gray-900">
                                     <span>Total</span>
-                                    <span>Rs {subtotal.toLocaleString()}</span>
+                                    <span>Rs {total.toLocaleString()}</span>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">Including VAT</p>
                             </div>
