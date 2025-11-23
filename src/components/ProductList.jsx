@@ -17,7 +17,10 @@ export default function ProductList() {
 
     const fetchProducts = async () => {
         setLoading(true);
-        let query = supabase.from('products').select('*');
+        let query = supabase
+            .from('products')
+            .select('*')
+            .eq('status', 'active'); // Only show active products
 
         if (category) {
             // Case-insensitive search for category
@@ -87,7 +90,7 @@ export default function ProductList() {
                             </h3>
                         </Link>
                         <p className="text-sm font-medium text-gray-900">
-                            Rs {Number(product.price).toLocaleString()}
+                            Rs {product.price_mur?.toLocaleString() || (product.price * 45).toLocaleString()}
                         </p>
                     </div>
                 </div>

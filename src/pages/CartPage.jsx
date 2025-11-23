@@ -7,7 +7,10 @@ export default function CartPage() {
     const { cart, removeFromCart, updateQuantity } = useCart();
 
     // Calculate total
-    const subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
+    const subtotal = cart.reduce((sum, item) => {
+        const price = item.price_mur || (Number(item.price) * 45);
+        return sum + (price * item.quantity);
+    }, 0);
 
     if (cart.length === 0) {
         return (
@@ -53,7 +56,7 @@ export default function CartPage() {
                                                     <Link to={`/product/${item.id}`}>{item.name}</Link>
                                                 </h3>
                                                 <p className="font-medium text-gray-900">
-                                                    Rs {(Number(item.price) * item.quantity).toLocaleString()}
+                                                    Rs {((item.price_mur || (Number(item.price) * 45)) * item.quantity).toLocaleString()}
                                                 </p>
                                             </div>
                                             <p className="text-sm text-gray-500 mt-1">{item.category}</p>

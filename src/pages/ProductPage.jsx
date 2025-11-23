@@ -70,7 +70,7 @@ export default function ProductPage() {
                         </div>
 
                         <p className="text-2xl font-medium text-gray-900 mb-8">
-                            Rs {Number(product.price).toLocaleString()}
+                            Rs {product.price_mur?.toLocaleString() || (product.price * 45).toLocaleString()}
                         </p>
 
                         <div className="prose prose-sm text-gray-600 mb-8">
@@ -87,8 +87,8 @@ export default function ProductPage() {
                                             key={size}
                                             onClick={() => setSelectedSize(size)}
                                             className={`w-12 h-12 flex items-center justify-center border ${selectedSize === size
-                                                    ? 'border-black bg-black text-white'
-                                                    : 'border-gray-200 text-gray-600 hover:border-black'
+                                                ? 'border-black bg-black text-white'
+                                                : 'border-gray-200 text-gray-600 hover:border-black'
                                                 } transition-colors`}
                                         >
                                             {size}

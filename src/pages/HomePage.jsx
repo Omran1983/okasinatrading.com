@@ -1,8 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ShoppingBag } from 'lucide-react';
+import { supabase } from '../supabase';
 
 export default function HomePage() {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchFeaturedProducts();
+    }, []);
+
+    async function fetchFeaturedProducts() {
+        try {
+            const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .eq('status', 'active')
+                .limit(8);
+
+            if (error) throw error;
+            setProducts(data || []);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}
@@ -14,23 +39,23 @@ export default function HomePage() {
                         alt="Elegant Fashion"
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-black/30" /> {/* Lighter overlay */}
+                    <div className="absolute inset-0 bg-black/30" />
                 </div>
 
                 {/* Content */}
                 <div className="relative z-10 text-center text-white px-4 max-w-5xl mx-auto">
-                    <p className="text-yellow-400 font-bold tracking-[0.2em] uppercase mb-4 text-sm md:text-base">
+                    <p className="text-yellow-400 font-bold tracking-[0.2em] uppercase mb-4 text-sm md:text-base animate-fade-in-up">
                         New Collection 2025
                     </p>
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-6 leading-tight tracking-tight">
+                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold mb-6 leading-tight tracking-tight animate-fade-in-up delay-100">
                         Elegance Redefined
                     </h1>
-                    <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+                    <p className="text-lg md:text-xl text-gray-200 mb-10 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up delay-200">
                         Discover the finest collection of modern Indian wear and accessories, curated for the sophisticated individual who values tradition and style.
                     </p>
                     <Link
                         to="/shop"
-                        className="inline-block bg-white text-gray-900 hover:bg-gray-100 transition-colors px-10 py-4 text-sm font-bold tracking-widest uppercase"
+                        className="inline-block bg-white text-gray-900 hover:bg-gray-100 transition-colors px-10 py-4 text-sm font-bold tracking-widest uppercase animate-fade-in-up delay-300"
                     >
                         Shop Collection
                     </Link>
@@ -43,11 +68,61 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Placeholder for Featured Products */}
-            <section className="py-24 px-4 max-w-7xl mx-auto text-center">
-                <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-4">Featured Collection</h2>
-                <div className="w-16 h-[2px] bg-yellow-500 mx-auto mb-12" />
-                <p className="text-gray-500">Loading products...</p>
+            {/* Featured Products Section */}
+            <section className="py-24 px-4 max-w-7xl mx-auto">
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-4">Featured Collection</h2>
+                    <div className="w-16 h-[2px] bg-yellow-500 mx-auto" />
+                </div>
+
+                {loading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                    </div>
+                ) : products.length === 0 ? (
+                    <div className="text-center text-gray-500 py-12">
+                        <p>No products found. Check back soon!</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {products.map((product) => (
+                            <Link key={product.id} to={`/product/${product.id}`} className="group">
+                                <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
+                                    <img
+                                        src={product.image_url}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+
+                                    {/* Quick Add Button */}
+                                    <button className="absolute bottom-4 right-4 bg-white p-3 rounded-full shadow-lg translate-y-12 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 hover:bg-yellow-400">
+                                        <ShoppingBag className="w-5 h-5 text-gray-900" />
+                                    </button>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">{product.category}</p>
+                                    <h3 className="text-lg font-medium text-gray-900 mb-1 group-hover:text-yellow-600 transition-colors">
+                                        {product.name}
+                                    </h3>
+                                    <p className="text-gray-900 font-bold">
+                                        Rs {product.price_mur?.toLocaleString() || (product.price * 45).toLocaleString()}
+                                    </p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+
+                <div className="text-center mt-16">
+                    <Link
+                        to="/shop"
+                        className="inline-flex items-center gap-2 border-b-2 border-gray-900 pb-1 text-sm font-bold uppercase tracking-widest hover:text-yellow-600 hover:border-yellow-600 transition-colors"
+                    >
+                        View All Products
+                        <ArrowRight className="w-4 h-4" />
+                    </Link>
+                </div>
             </section>
         </div>
     );
