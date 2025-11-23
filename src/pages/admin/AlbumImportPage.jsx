@@ -172,6 +172,15 @@ export default function AlbumImportPage() {
                     </label>
                 </div>
 
+                {/* Import Instructions */}
+                {selected && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                            <strong>Ready to import!</strong> Click the button below to download photos from Facebook and create products in your database.
+                        </p>
+                    </div>
+                )}
+
                 {/* Import Button */}
                 <button
                     onClick={startImport}
@@ -230,7 +239,7 @@ export default function AlbumImportPage() {
                                         <p className="text-xs text-gray-600 line-clamp-2">{product.description}</p>
                                         <div className="flex justify-between items-center mt-2">
                                             <span className="text-xs bg-gray-100 px-2 py-1 rounded">{product.category}</span>
-                                            <span className="font-bold text-green-600">${product.suggestedPrice}</span>
+                                            <span className="font-bold text-green-600">Rs {(product.suggestedPrice * 45).toLocaleString()}</span>
                                         </div>
                                     </div>
                                 ))}
