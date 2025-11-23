@@ -13,6 +13,10 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
+import NewArrivalsPage from './pages/NewArrivalsPage';
+import FeedbackPage from './pages/FeedbackPage';
+import WishlistPage from './pages/WishlistPage';
+import MyAccountPage from './pages/MyAccountPage';
 import AdminMarketingPage from './pages/admin/AdminMarketingPage';
 import AdminReviewsPage from './pages/admin/AdminReviewsPage';
 import AlbumImportPage from './pages/admin/AlbumImportPage';
@@ -42,6 +46,10 @@ export default function App() {
                                 <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                                 <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                                 <Route path="/login" element={<LoginPage />} />
+                                <Route path="/new-arrivals" element={<NewArrivalsPage />} />
+                                <Route path="/feedback" element={<FeedbackPage />} />
+                                <Route path="/wishlist" element={<WishlistPage />} />
+                                <Route path="/account" element={<MyAccountPage />} />
 
                                 {/* Protected Admin Routes */}
                                 <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />

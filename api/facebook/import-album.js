@@ -98,9 +98,11 @@ export default async function handler(req, res) {
                         name: productData.name,
                         description: productData.description,
                         price: productData.suggestedPrice,
+                        price_mur: productData.suggestedPrice * 45, // Convert to MUR
                         category: productData.category,
                         image_url: imageUrl,
                         stock_qty: 10,
+                        is_active: false, // Draft status
                         status: 'draft',
                     })
                     .select()
