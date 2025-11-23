@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
+import { Truck, Home } from 'lucide-react';
 
 export default function CheckoutPage() {
     const { cart, clearCart } = useCart();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [shippingMethod, setShippingMethod] = useState('postage'); // 'postage' or 'door'
+
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -16,7 +19,19 @@ export default function CheckoutPage() {
         notes: ''
     });
 
-    const subtotal = cart.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
+    const SHIPPING_RATES = {
+        postage: 100,
+        door: 150
+    };
+
+    // Calculate subtotal using correct price
+    const subtotal = cart.reduce((sum, item) => {
+        const price = item.price_mur || (Number(item.price) * 45);
+        return sum + (price * item.quantity);
+    }, 0);
+
+    const shippingCost = SHIPPING_RATES[shippingMethod];
+    const total = subtotal + shippingCost;
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,9 +46,16 @@ export default function CheckoutPage() {
             customer_email: formData.email,
             customer_phone: formData.phone,
             shipping_address: `${formData.address}, ${formData.city}`,
+            shipping_method: shippingMethod,
             order_notes: formData.notes,
-            total_amount: subtotal,
-            items: cart,
+            total_amount: total,
+            items: cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price_mur || (Number(item.price) * 45),
+                selectedSize: item.selectedSize
+            })),
             status: 'pending',
             created_at: new Date().toISOString()
         };
@@ -131,6 +153,46 @@ export default function CheckoutPage() {
                                 />
                             </div>
 
+                            {/* Shipping Method Selection */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Shipping Method</label>
+                                <div className="space-y-3">
+                                    <label className={`flex items-center justify-between p-4 border cursor-pointer transition-all ${shippingMethod === 'postage' ? 'border-black bg-gray-50' : 'border-gray-200'}`}>
+                                        <div className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="shipping"
+                                                checked={shippingMethod === 'postage'}
+                                                onChange={() => setShippingMethod('postage')}
+                                                className="text-black focus:ring-black mr-3"
+                                            />
+                                            <div className="flex items-center">
+                                                <Truck size={18} className="mr-2 text-gray-500" />
+                                                <span className="font-medium">Postage (Island-wide)</span>
+                                            </div>
+                                        </div>
+                                        <span className="font-bold">Rs 100</span>
+                                    </label>
+
+                                    <label className={`flex items-center justify-between p-4 border cursor-pointer transition-all ${shippingMethod === 'door' ? 'border-black bg-gray-50' : 'border-gray-200'}`}>
+                                        <div className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="shipping"
+                                                checked={shippingMethod === 'door'}
+                                                onChange={() => setShippingMethod('door')}
+                                                className="text-black focus:ring-black mr-3"
+                                            />
+                                            <div className="flex items-center">
+                                                <Home size={18} className="mr-2 text-gray-500" />
+                                                <span className="font-medium">Door Delivery</span>
+                                            </div>
+                                        </div>
+                                        <span className="font-bold">Rs 150</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Order Notes (Optional)</label>
                                 <textarea
@@ -147,13 +209,13 @@ export default function CheckoutPage() {
                                 disabled={loading}
                                 className="w-full bg-black text-white py-4 text-sm font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50"
                             >
-                                {loading ? 'Processing...' : 'Place Order'}
+                                {loading ? 'Processing...' : `Place Order (Rs ${total.toLocaleString()})`}
                             </button>
                         </form>
                     </div>
 
                     {/* Order Summary */}
-                    <div className="bg-gray-50 p-8 h-fit">
+                    <div className="bg-gray-50 p-8 h-fit sticky top-24">
                         <h2 className="text-lg font-bold uppercase tracking-widest mb-8">Your Order</h2>
                         <div className="space-y-6 mb-8">
                             {cart.map((item) => (
@@ -169,17 +231,25 @@ export default function CheckoutPage() {
                                         <h3 className="font-serif font-medium text-gray-900">{item.name}</h3>
                                         <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                                         <p className="text-sm font-medium text-gray-900">
-                                            Rs {(Number(item.price) * item.quantity).toLocaleString()}
+                                            Rs {((item.price_mur || (Number(item.price) * 45)) * item.quantity).toLocaleString()}
                                         </p>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="border-t border-gray-200 pt-6">
-                            <div className="flex justify-between text-xl font-bold text-gray-900">
-                                <span>Total</span>
+                        <div className="border-t border-gray-200 pt-6 space-y-3">
+                            <div className="flex justify-between text-gray-600">
+                                <span>Subtotal</span>
                                 <span>Rs {subtotal.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between text-gray-600">
+                                <span>Shipping</span>
+                                <span>Rs {shippingCost}</span>
+                            </div>
+                            <div className="flex justify-between text-xl font-bold text-gray-900 pt-3 border-t border-gray-200">
+                                <span>Total</span>
+                                <span>Rs {total.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
