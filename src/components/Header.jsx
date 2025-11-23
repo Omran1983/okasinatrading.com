@@ -8,7 +8,7 @@ export default function Header() {
     return (
         <header className="bg-white shadow-sm sticky top-0 z-50 font-sans">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center h-20 gap-8">
+                <div className="flex justify-between items-center h-20 gap-4 lg:gap-8">
                     {/* Logo */}
                     <div className="flex-shrink-0">
                         <Link to="/" className="text-3xl font-serif font-bold text-gray-900 tracking-widest">

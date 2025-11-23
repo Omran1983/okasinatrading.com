@@ -15,7 +15,7 @@ import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import AdminMarketingPage from './pages/admin/AdminMarketingPage';
 import AdminReviewsPage from './pages/admin/AdminReviewsPage';
 import AlbumImportPage from './pages/admin/AlbumImportPage';
-// ... existing imports remain unchanged
+import MediaManagerPage from './pages/admin/MediaManagerPage';
 import StockManagerPage from './pages/StockManagerPage';
 import Header from './components/Header';
 import Footer from './components/Footer';

@@ -37,3 +37,4 @@ service-account.json
 *.key
 
 .vercel
+.env*.local

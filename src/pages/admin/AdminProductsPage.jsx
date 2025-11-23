@@ -12,19 +12,23 @@ import {
     Trash2,
     Eye,
     Package,
-    AlertCircle
+    AlertCircle,
+    CheckCircle,
+    Facebook
 } from 'lucide-react';
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [publishing, setPublishing] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [stats, setStats] = useState({
         total: 0,
         inStock: 0,
         lowStock: 0,
-        outOfStock: 0
+        outOfStock: 0,
+        drafts: 0
     });
 
     useEffect(() => {
@@ -55,8 +59,9 @@ export default function AdminProductsPage() {
         const inStock = productData.filter(p => p.stock > 10).length;
         const lowStock = productData.filter(p => p.stock > 0 && p.stock <= 10).length;
         const outOfStock = productData.filter(p => p.stock === 0).length;
+        const drafts = productData.filter(p => p.status === 'draft').length;
 
-        setStats({ total, inStock, lowStock, outOfStock });
+        setStats({ total, inStock, lowStock, outOfStock, drafts });
     };
 
     const handleDelete = async (productId) => {
@@ -74,6 +79,28 @@ export default function AdminProductsPage() {
         } catch (error) {
             console.error('Error deleting product:', error);
             alert('Failed to delete product');
+        }
+    };
+
+    const handleBulkPublish = async () => {
+        if (!confirm(`Publish all ${stats.drafts} draft products? They will become visible on the website.`)) return;
+
+        try {
+            setPublishing(true);
+            const { error } = await supabase
+                .from('products')
+                .update({ status: 'active' })
+                .eq('status', 'draft');
+
+            if (error) throw error;
+
+            alert(`Successfully published ${stats.drafts} products!`);
+            fetchProducts();
+        } catch (error) {
+            console.error('Error publishing products:', error);
+            alert('Failed to publish products');
+        } finally {
+            setPublishing(false);
         }
     };
 
@@ -156,7 +183,7 @@ export default function AdminProductsPage() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3 w-full md:w-auto">
+                        <div className="flex flex-wrap gap-3 w-full md:w-auto">
                             <select
                                 value={categoryFilter}
                                 onChange={(e) => setCategoryFilter(e.target.value)}
@@ -168,12 +195,31 @@ export default function AdminProductsPage() {
                                 ))}
                             </select>
 
+                            {stats.drafts > 0 && (
+                                <button
+                                    onClick={handleBulkPublish}
+                                    disabled={publishing}
+                                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+                                >
+                                    <CheckCircle size={20} />
+                                    {publishing ? 'Publishing...' : `Publish ${stats.drafts} Drafts`}
+                                </button>
+                            )}
+
                             <Link
-                                to="/admin/stock-manager"
+                                to="/admin/album-import"
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
                             >
+                                <Facebook size={20} />
+                                Import from Social
+                            </Link>
+
+                            <Link
+                                to="/admin/stock-manager"
+                                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                            >
                                 <Upload size={20} />
-                                Bulk Import
+                                Bulk CSV Import
                             </Link>
                         </div>
                     </div>
