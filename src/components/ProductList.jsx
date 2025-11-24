@@ -63,7 +63,7 @@ export default function ProductList() {
                 <div key={product.id} className="group cursor-pointer">
                     <div className="relative aspect-[3/4] bg-gray-100 mb-4 overflow-hidden">
                         <img
-                            src={product.image_url || product.image}
+                            src={product.image_url || product.image || 'https://via.placeholder.com/400x600?text=No+Image'}
                             alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                             onError={(e) => (e.target.src = 'https://via.placeholder.com/400x600?text=No+Image')}
@@ -90,7 +90,11 @@ export default function ProductList() {
                             </h3>
                         </Link>
                         <p className="text-sm font-medium text-gray-900">
-                            Rs {product.price_mur?.toLocaleString() || (product.price * 45).toLocaleString()}
+                            {product.price_mur
+                                ? `Rs ${product.price_mur.toLocaleString()}`
+                                : product.price
+                                    ? `Rs ${(product.price * 45).toLocaleString()}`
+                                    : 'Price on Request'}
                         </p>
                     </div>
                 </div>
