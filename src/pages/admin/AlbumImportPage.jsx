@@ -22,15 +22,18 @@ export default function AlbumImportPage() {
     if (!isAdmin()) return <div className="p-8 text-red-600">Access denied.</div>;
 
     const loadAlbums = async () => {
+        console.log('[AlbumImport] Starting loadAlbums...');
         setFetching(true);
         setLoadError(null);
         try {
             const res = await fetch('/api/facebook/list-albums');
+            console.log('[AlbumImport] Fetch response:', res.status, res.ok);
 
             let data;
             const contentType = res.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 data = await res.json();
+                console.log('[AlbumImport] Received data:', data);
             } else {
                 throw new Error(`Server Error (${res.status}): Check Vercel logs.`);
             }
@@ -39,13 +42,15 @@ export default function AlbumImportPage() {
                 throw new Error(data.error || `Failed ${res.status}`);
             }
 
+            console.log('[AlbumImport] Setting albums:', data.albums?.length || 0, 'albums');
             setAlbums(data.albums || []);
         } catch (err) {
-            console.error('Failed to load albums:', err);
+            console.error('[AlbumImport] Failed to load albums:', err);
             setLoadError(err.message);
             setAlbums([]);
         } finally {
             setFetching(false);
+            console.log('[AlbumImport] loadAlbums complete');
         }
     };
 
