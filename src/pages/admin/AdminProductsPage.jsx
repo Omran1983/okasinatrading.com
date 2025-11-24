@@ -82,6 +82,68 @@ export default function AdminProductsPage() {
         }
     };
 
+
+
+    const handleExport = async () => {
+        try {
+            setLoading(true);
+            const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                alert('No products to export');
+                return;
+            }
+
+            // Define CSV headers
+            const headers = [
+                'id',
+                'name',
+                'description',
+                'category',
+                'subcategory',
+                'price',
+                'price_mur',
+                'stock',
+                'sku',
+                'status',
+                'image_url'
+            ];
+
+            // Convert data to CSV
+            const csvContent = [
+                headers.join(','),
+                ...data.map(product => headers.map(header => {
+                    const value = product[header] || '';
+                    // Escape quotes and wrap in quotes if necessary
+                    const stringValue = String(value).replace(/"/g, '""');
+                    return `"${stringValue}"`;
+                }).join(','))
+            ].join('\n');
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `products_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        } catch (error) {
+            console.error('Error exporting products:', error);
+            alert('Failed to export products');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleBulkPublish = async () => {
         if (!confirm(`Publish all ${stats.drafts} draft products? They will become visible on the website.`)) return;
 
@@ -213,6 +275,14 @@ export default function AdminProductsPage() {
                                 <Facebook size={20} />
                                 Import from Social
                             </Link>
+
+                            <button
+                                onClick={handleExport}
+                                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                            >
+                                <Download size={20} />
+                                Export CSV
+                            </button>
 
                             <Link
                                 to="/admin/stock-manager"
