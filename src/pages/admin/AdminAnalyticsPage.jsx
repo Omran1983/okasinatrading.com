@@ -317,7 +317,7 @@ export default function AdminAnalyticsPage() {
                                         <p className="text-sm text-gray-500">{product.category}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-medium text-gray-900">${product.price?.toFixed(2)}</p>
+                                        <p className="font-medium text-gray-900">Rs {product.price_mur?.toLocaleString() || (product.price * 45).toLocaleString()}</p>
                                         <p className="text-sm text-gray-500">{product.stock} in stock</p>
                                     </div>
                                 </div>

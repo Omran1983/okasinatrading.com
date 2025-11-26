@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../supabase';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Home } from 'lucide-react';
+import { Truck, Home, CreditCard, Smartphone } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 export default function CheckoutPage() {
     const { cart, clearCart } = useCart();
     const navigate = useNavigate();
+    const { addToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [shippingMethod, setShippingMethod] = useState('postage'); // 'postage' or 'door'
+    const [paymentMethod, setPaymentMethod] = useState('juice'); // 'juice' or 'card'
 
     const [formData, setFormData] = useState({
         fullName: '',
@@ -37,128 +40,112 @@ export default function CheckoutPage() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    const sendConfirmationEmail = async (orderId) => {
+        try {
+            const itemsHtml = cart.map(item => `
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">x${item.quantity}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">Rs ${((item.price_mur || item.price * 45) * item.quantity).toLocaleString()}</td>
+                </tr>
+            `).join('');
 
-        const orderData = {
-            customer_name: formData.fullName,
-            customer_email: formData.email,
-            customer_phone: formData.phone,
-            shipping_address: `${formData.address}, ${formData.city}`,
-            shipping_method: shippingMethod,
-            order_notes: formData.notes,
-            total_amount: total,
-            items: cart.map(item => ({
-                id: item.id,
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price_mur || (Number(item.price) * 45),
-                selectedSize: item.selectedSize,
-                color: item.color,
-                image: item.image_url || item.image
-            })),
-            status: 'pending',
-            created_at: new Date().toISOString()
-        };
+            const emailHtml = `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1 style="color: #000;">Order Confirmed!</h1>
+                    <p>Hi ${formData.fullName},</p>
+                    <p>Thank you for your order. We have received it and will begin processing shortly.</p>
+                    
+                    <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="margin-top: 0;">Order #${orderId.slice(0, 8).toUpperCase()}</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            ${itemsHtml}
+                        </table>
+                        <div style="margin-top: 20px; text-align: right; font-weight: bold;">
+                            Total: Rs ${total.toLocaleString()}
+                        </div>
+                    </div>
 
-        const { error } = await supabase
-            .from('orders')
-            .insert([orderData]);
+                    ${paymentMethod === 'juice' ? `
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; color: #856404;">
+                        <strong>Payment Required (Juice):</strong><br/>
+                        Please transfer <strong>Rs ${total.toLocaleString()}</strong> to MCB Account: <strong>000448283928</strong><br/>
+                        Reference: Order #${orderId.slice(0, 8).toUpperCase()}
+                    </div>
+                    ` : ''}
 
-        if (error) {
-            alert('Error placing order: ' + error.message);
-            setLoading(false);
-        } else {
-            clearCart();
-            alert('Order placed successfully!');
-            navigate('/'); // Or redirect to a Thank You page
+                    <p>We will notify you when your order ships!</p>
+                    <p>Best,<br/>Okasina Fashion Team</p>
+                </div>
+            `;
+
+            await fetch('/api/send-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: formData.email,
+                    subject: `Order Confirmation #${orderId.slice(0, 8).toUpperCase()}`,
+                    html: emailHtml
+                })
+            });
+        } catch (error) {
+            console.error('Failed to send email:', error);
         }
     };
-
-    if (cart.length === 0) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>Your cart is empty. Redirecting...</p>
-            </div>
-        );
-    }
-
     return (
-        <div className="min-h-screen bg-white py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h1 className="text-4xl font-serif font-bold mb-12 text-center">Checkout</h1>
+        <div className="min-h-screen bg-white pt-20 pb-12">
+            <div className="container mx-auto px-4">
+                <h1 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-8 text-center">Checkout</h1>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-                    {/* Checkout Form */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+                    {/* Left Column: Forms */}
                     <div>
-                        <h2 className="text-lg font-bold uppercase tracking-widest mb-8">Shipping Details</h2>
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                <input
-                                    type="text"
-                                    name="fullName"
-                                    required
-                                    className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
-                                    value={formData.fullName}
-                                    onChange={handleChange}
-                                />
-                            </div>
+                        <form onSubmit={(e) => { e.preventDefault(); sendConfirmationEmail('ORD-' + Math.random().toString(36).substr(2, 9)); }} className="space-y-8">
 
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        required
-                                        className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                    />
+                            {/* 1. Contact Information */}
+                            <section>
+                                <h2 className="text-lg font-bold uppercase tracking-widest mb-6 border-b pb-2">1. Contact Information</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                                        <input
+                                            type="text"
+                                            name="fullName"
+                                            required
+                                            className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
+                                            value={formData.fullName}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            required
+                                            className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            required
+                                            className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                                    <input
-                                        type="tel"
-                                        name="phone"
-                                        required
-                                        className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                            </div>
+                            </section>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    required
-                                    className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                                <input
-                                    type="text"
-                                    name="city"
-                                    required
-                                    className="w-full border-gray-300 border p-3 focus:ring-black focus:border-black transition-colors"
-                                    value={formData.city}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            {/* Shipping Method Selection */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Shipping Method</label>
-                                <div className="space-y-3">
+                            {/* 2. Shipping Method */}
+                            <section>
+                                <h2 className="text-lg font-bold uppercase tracking-widest mb-6 border-b pb-2">2. Shipping Method</h2>
+                                <div className="space-y-4">
                                     <label className={`flex items-center justify-between p-4 border cursor-pointer transition-all ${shippingMethod === 'postage' ? 'border-black bg-gray-50' : 'border-gray-200'}`}>
                                         <div className="flex items-center">
                                             <input
@@ -170,7 +157,7 @@ export default function CheckoutPage() {
                                             />
                                             <div className="flex items-center">
                                                 <Truck size={18} className="mr-2 text-gray-500" />
-                                                <span className="font-medium">Postage (Island-wide)</span>
+                                                <span className="font-medium">Standard Postage</span>
                                             </div>
                                         </div>
                                         <span className="font-bold">Rs 100</span>
@@ -193,7 +180,66 @@ export default function CheckoutPage() {
                                         <span className="font-bold">Rs 150</span>
                                     </label>
                                 </div>
-                            </div>
+                            </section>
+
+                            {/* 3. Payment Method */}
+                            <section>
+                                <h2 className="text-lg font-bold uppercase tracking-widest mb-6 border-b pb-2">3. Payment Method</h2>
+                                <div className="space-y-4">
+                                    {/* Juice Payment */}
+                                    <label className={`block p-4 border cursor-pointer transition-all ${paymentMethod === 'juice' ? 'border-black bg-gray-50' : 'border-gray-200'}`}>
+                                        <div className="flex items-center mb-2">
+                                            <input
+                                                type="radio"
+                                                name="payment"
+                                                checked={paymentMethod === 'juice'}
+                                                onChange={() => setPaymentMethod('juice')}
+                                                className="text-black focus:ring-black mr-3"
+                                            />
+                                            <div className="flex items-center">
+                                                <Smartphone size={18} className="mr-2 text-gray-500" />
+                                                <span className="font-bold">Juice by MCB</span>
+                                            </div>
+                                        </div>
+                                        {paymentMethod === 'juice' && (
+                                            <div className="ml-7 mt-2 text-sm text-gray-600 bg-white p-3 border border-gray-200 rounded">
+                                                <p className="font-medium text-black mb-1">Instructions:</p>
+                                                <p>1. Open Juice App</p>
+                                                <p>2. Pay to MCB Account: <strong>000448283928</strong></p>
+                                                <p>3. Use your Name as reference</p>
+                                                <p className="mt-2 text-xs text-gray-500">* Order will be processed after payment confirmation.</p>
+                                            </div>
+                                        )}
+                                    </label>
+
+                                    {/* Card Payment */}
+                                    <label className={`block p-4 border cursor-pointer transition-all ${paymentMethod === 'card' ? 'border-black bg-gray-50' : 'border-gray-200'}`}>
+                                        <div className="flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="payment"
+                                                checked={paymentMethod === 'card'}
+                                                onChange={() => setPaymentMethod('card')}
+                                                className="text-black focus:ring-black mr-3"
+                                            />
+                                            <div className="flex items-center">
+                                                <CreditCard size={18} className="mr-2 text-gray-500" />
+                                                <span className="font-bold">Credit / Debit Card</span>
+                                            </div>
+                                        </div>
+                                        {paymentMethod === 'card' && (
+                                            <div className="ml-7 mt-2">
+                                                <div className="flex gap-2 mb-2">
+                                                    <div className="h-6 w-10 bg-gray-200 rounded"></div>
+                                                    <div className="h-6 w-10 bg-gray-200 rounded"></div>
+                                                    <div className="h-6 w-10 bg-gray-200 rounded"></div>
+                                                </div>
+                                                <p className="text-xs text-gray-500">Secure payment via Stripe (Demo Mode)</p>
+                                            </div>
+                                        )}
+                                    </label>
+                                </div>
+                            </section>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Order Notes (Optional)</label>
@@ -209,7 +255,7 @@ export default function CheckoutPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-black text-white py-4 text-sm font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                className="w-full bg-black text-white py-4 text-sm font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                             >
                                 {loading ? 'Processing...' : `Place Order (Rs ${total.toLocaleString()})`}
                             </button>
@@ -238,6 +284,24 @@ export default function CheckoutPage() {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+
+                        {/* Promo Code Input */}
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Promo Code</label>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter code"
+                                    className="flex-1 border-gray-300 border p-2 text-sm focus:ring-black focus:border-black"
+                                />
+                                <button
+                                    type="button"
+                                    className="bg-gray-900 text-white px-4 py-2 text-sm font-medium hover:bg-black transition-colors"
+                                >
+                                    Apply
+                                </button>
+                            </div>
                         </div>
 
                         <div className="border-t border-gray-200 pt-6 space-y-3">

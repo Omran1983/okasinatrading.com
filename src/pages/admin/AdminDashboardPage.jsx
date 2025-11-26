@@ -14,8 +14,11 @@ import {
     Share2,
     Settings,
     Sparkles,
-    Image as ImageIcon
+    Image as ImageIcon,
+    MessageSquare,
+    Tag
 } from 'lucide-react';
+import InventoryAlerts from '../../components/admin/InventoryAlerts';
 
 export default function AdminDashboardPage() {
     const [stats, setStats] = useState({
@@ -266,27 +269,10 @@ export default function AdminDashboardPage() {
 
                 {/* Charts & Insights */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">User Types</h3>
-                        <div className="h-48 flex items-center justify-center text-gray-400">
-                            <div className="text-center">
-                                <BarChart size={48} className="mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">Chart coming soon</p>
-                            </div>
-                        </div>
+                    <div className="lg:col-span-1">
+                        <InventoryAlerts />
                     </div>
-
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Orders by Time of Day</h3>
-                        <div className="h-48 flex items-center justify-center text-gray-400">
-                            <div className="text-center">
-                                <TrendingUp size={48} className="mx-auto mb-2 opacity-50" />
-                                <p className="text-sm">Chart coming soon</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Orders by Status</h3>
                         <div className="h-48 flex items-center justify-center text-gray-400">
                             <div className="text-center">

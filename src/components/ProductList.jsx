@@ -1,104 +1,121 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '../supabase';
-import { useCart } from '../contexts/CartContext';
+import ProductCard from './ProductCard';
+import { ProductGridSkeleton } from './common/SkeletonLoader';
+import ProductQuickView from './product/ProductQuickView';
 
-export default function ProductList() {
+export default function ProductList({ filters }) {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchParams] = useSearchParams();
-    const { addToCart } = useCart();
-
-    const category = searchParams.get('category');
+    const [quickViewProduct, setQuickViewProduct] = useState(null);
 
     useEffect(() => {
         fetchProducts();
-    }, [category]);
+    }, []);
 
     const fetchProducts = async () => {
         setLoading(true);
-        let query = supabase
+        // Fetch ALL active products initially
+        const { data, error } = await supabase
             .from('products')
             .select('*')
-            .eq('status', 'active'); // Only show active products
+            .eq('status', 'active');
 
-        if (category) {
-            // Case-insensitive search for category
-            query = query.ilike('category', `%${category}%`);
-        }
-
-        const { data, error } = await query;
         if (!error) {
-            setProducts(data || []);
+            // Normalize data
+            const normalized = (data || []).map(p => ({
+                ...p,
+                category: p.category ?? "Accessories",
+                price_mur: p.price_mur || (p.price ? p.price * 45 : 0)
+            }));
+            setProducts(normalized);
         }
         setLoading(false);
     };
 
+    // Memoize filtering logic to prevent unnecessary recalculations
+    const filteredProducts = useMemo(() => {
+        return products.filter(product => {
+            // 1. Category Filter
+            if (filters?.category && product.category.toLowerCase() !== filters.category.toLowerCase()) {
+                return false;
+            }
+
+            // 2. Sub-category Filter
+            if (filters?.subcategory) {
+                if (product.subcategory !== filters.subcategory) {
+                    return false;
+                }
+            }
+
+            // 3. Search Filter
+            if (filters?.search) {
+                const searchTerm = filters.search.toLowerCase();
+                const searchableText = `${product.name} ${product.description || ''} ${product.category}`.toLowerCase();
+                if (!searchableText.includes(searchTerm)) {
+                    return false;
+                }
+            }
+
+            // 4. Price Filter
+            if (filters?.priceRange) {
+                const price = product.price_mur;
+                if (price < filters.priceRange.min || price > filters.priceRange.max) {
+                    return false;
+                }
+            }
+
+            // 5. Sort
+            // (Sorting logic can be added here if passed via filters)
+
+            return true;
+        });
+    }, [products, filters]);
+
+    const handleQuickView = useCallback((product) => {
+        setQuickViewProduct(product);
+    }, []);
+
+    const handleCloseQuickView = useCallback(() => {
+        setQuickViewProduct(null);
+    }, []);
+
     if (loading) {
-        return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
-                {[1, 2, 3, 4].map((n) => (
-                    <div key={n} className="animate-pulse">
-                        <div className="bg-gray-100 aspect-[3/4] mb-4"></div>
-                        <div className="h-4 bg-gray-100 w-3/4 mb-2"></div>
-                        <div className="h-4 bg-gray-100 w-1/2"></div>
-                    </div>
-                ))}
-            </div>
-        );
+        return <ProductGridSkeleton count={6} />;
     }
 
-    if (products.length === 0) {
+    if (filteredProducts.length === 0) {
         return (
-            <div className="text-center py-20">
-                <p className="text-gray-500 font-light text-lg">No products found in this category.</p>
-                <Link to="/shop" className="text-black underline mt-2 inline-block hover:text-yellow-600 transition-colors">View all products</Link>
+            <div className="text-center py-20 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                <p className="text-gray-500 font-light text-lg">No products found matching your filters.</p>
+                <button
+                    onClick={() => window.location.href = '/shop'}
+                    className="text-[#d4af37] underline mt-2 inline-block hover:text-[#b5952f] transition-colors"
+                >
+                    Clear all filters
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-12">
-            {products.map((product) => (
-                <div key={product.id} className="group cursor-pointer">
-                    <div className="relative aspect-[3/4] bg-gray-100 mb-4 overflow-hidden">
-                        <img
-                            src={product.image_url || product.image || 'https://via.placeholder.com/400x600?text=No+Image'}
-                            alt={product.name}
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                            onError={(e) => (e.target.src = 'https://via.placeholder.com/400x600?text=No+Image')}
-                        />
-                        {/* Quick Add Overlay */}
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                addToCart(product);
-                            }}
-                            className="absolute inset-x-0 bottom-0 bg-white/90 py-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-center text-xs font-bold uppercase tracking-widest hover:bg-black hover:text-white"
-                        >
-                            Quick Add
-                        </button>
-                    </div>
+        <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {filteredProducts.map((product) => (
+                    <ProductCard
+                        key={product.id}
+                        product={product}
+                        onQuickView={handleQuickView}
+                    />
+                ))}
+            </div>
 
-                    <div className="text-center space-y-1">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-500">
-                            {product.category}
-                        </p>
-                        <Link to={`/product/${product.id}`}>
-                            <h3 className="font-serif text-lg text-gray-900 group-hover:text-yellow-600 transition-colors">
-                                {product.name}
-                            </h3>
-                        </Link>
-                        <p className="text-sm font-medium text-gray-900">
-                            {product.price_mur
-                                ? `Rs ${product.price_mur.toLocaleString()}`
-                                : product.price
-                                    ? `Rs ${(product.price * 45).toLocaleString()}`
-                                    : 'Price on Request'}
-                        </p>
-                    </div>
-                </div>
-            ))}
-        </div>
+            {/* Quick View Modal */}
+            <ProductQuickView
+                product={quickViewProduct}
+                isOpen={!!quickViewProduct}
+                onClose={handleCloseQuickView}
+            />
+        </>
     );
 }

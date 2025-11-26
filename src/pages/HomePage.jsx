@@ -17,6 +17,7 @@ export default function HomePage() {
                 .from('products')
                 .select('*')
                 .eq('status', 'active')
+                .order('created_at', { ascending: false })
                 .limit(8);
 
             if (error) throw error;

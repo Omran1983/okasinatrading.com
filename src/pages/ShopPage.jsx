@@ -1,28 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductList from '../components/ProductList';
+import ProductFilters from '../components/shop/ProductFilters';
 
 export default function ShopPage() {
-    const [searchParams] = useSearchParams();
-    const category = searchParams.get('category');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-    // Helper to format title (e.g., "clothing" -> "Clothing")
-    const title = category
-        ? category.charAt(0).toUpperCase() + category.slice(1)
-        : "Our Collection";
+    // Initialize filters from URL
+    const [filters, setFilters] = useState({
+        category: searchParams.get('category') || null,
+        subcategory: searchParams.get('subcategory') || null,
+        search: searchParams.get('search') || null,
+        priceRange: null,
+        sort: 'newest'
+    });
+
+    // Update URL when filters change
+    useEffect(() => {
+        const params = {};
+        if (filters.category) params.category = filters.category;
+        if (filters.subcategory) params.subcategory = filters.subcategory;
+        if (filters.search) params.search = filters.search;
+        setSearchParams(params);
+    }, [filters, setSearchParams]);
+
+    // Helper to format title
+    const title = filters.search
+        ? `Search results for "${filters.search}"`
+        : filters.subcategory
+            ? filters.subcategory
+            : filters.category
+                ? filters.category
+                : "Our Collection";
 
     return (
-        <div className="min-h-screen bg-white py-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-4">
-                        {title}
-                    </h1>
-                    <p className="text-gray-500 max-w-2xl mx-auto font-light">
-                        Explore our curated selection of premium fashion and accessories.
-                    </p>
+        <div className="min-h-screen bg-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="flex items-baseline justify-between border-b border-gray-200 pb-6">
+                    <h1 className="text-4xl font-serif font-bold text-gray-900">{title}</h1>
+
+                    <div className="flex items-center">
+                        <button
+                            type="button"
+                            className="-m-2 ml-4 p-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden"
+                            onClick={() => setMobileFiltersOpen(true)}
+                        >
+                            <span className="sr-only">Filters</span>
+                            <svg className="h-5 w-5" aria-hidden="true" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <ProductList />
+
+                <section aria-labelledby="products-heading" className="pt-6 pb-24">
+                    <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-4">
+                        {/* Filters */}
+                        <ProductFilters
+                            filters={filters}
+                            setFilters={setFilters}
+                            mobileOpen={mobileFiltersOpen}
+                            setMobileOpen={setMobileFiltersOpen}
+                        />
+
+                        {/* Product Grid */}
+                        <div className="lg:col-span-3">
+                            <ProductList filters={filters} />
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     );

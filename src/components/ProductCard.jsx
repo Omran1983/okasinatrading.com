@@ -1,0 +1,110 @@
+import React, { memo } from 'react';
+import { Link } from 'react-router-dom';
+import { ShoppingCart, Eye } from 'lucide-react';
+import LazyImage from './common/LazyImage';
+import { useCart } from '../contexts/CartContext';
+import { useToast } from '../contexts/ToastContext';
+
+const ProductCard = memo(({ product, onQuickView }) => {
+    const { addToCart } = useCart();
+    const { addToast } = useToast();
+
+    const handleAddToCart = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCart(product);
+        addToast(`Added ${product.name} to cart`);
+    };
+
+    const handleQuickView = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onQuickView) {
+            onQuickView(product);
+        }
+    };
+
+    return (
+        <div className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+            {/* Image Container */}
+            <div className="aspect-[3/4] w-full overflow-hidden bg-gray-100 relative">
+                <Link to={`/product/${product.id}`}>
+                    <LazyImage
+                        src={product.image_url || product.image || 'https://via.placeholder.com/400x600?text=No+Image'}
+                        alt={product.name}
+                        className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                    />
+                </Link>
+
+                {/* Overlay Actions */}
+                <div className="absolute inset-x-0 bottom-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-2 justify-end bg-gradient-to-t from-black/50 to-transparent pb-6">
+                    <button
+                        onClick={handleAddToCart}
+                        className="w-full bg-white text-black py-2.5 px-4 text-sm font-bold uppercase tracking-wider hover:bg-[#d4af37] hover:text-white transition-colors shadow-lg flex items-center justify-center gap-2"
+                    >
+                        <ShoppingCart size={16} />
+                        Add to Cart
+                    </button>
+                    {onQuickView && (
+                        <button
+                            onClick={handleQuickView}
+                            className="w-full bg-black/80 text-white py-2.5 px-4 text-sm font-bold uppercase tracking-wider hover:bg-black transition-colors shadow-lg flex items-center justify-center gap-2 backdrop-blur-sm"
+                        >
+                            <Eye size={16} />
+                            Quick View
+                        </button>
+                    )}
+                </div>
+
+                {/* Badges */}
+                {product.stock_qty < 5 && product.stock_qty > 0 && (
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                        Low Stock
+                    </span>
+                )}
+                {product.mrp > product.price_mur && (
+                    <span className="absolute top-2 right-2 bg-[#d4af37] text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                        {Math.round(((product.mrp - product.price_mur) / product.mrp) * 100)}% OFF
+                    </span>
+                )}
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+                <div className="flex justify-between items-start mb-1">
+                    <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{product.category}</p>
+                        <h3 className="text-sm text-gray-900 font-medium line-clamp-2 min-h-[2.5em]">
+                            <Link to={`/product/${product.id}`} className="hover:text-[#d4af37] transition-colors">
+                                {product.name}
+                            </Link>
+                        </h3>
+                    </div>
+                </div>
+                <div className="flex items-baseline gap-2 mt-2">
+                    <p className="text-lg font-bold text-gray-900">
+                        Rs {product.price_mur.toLocaleString()}
+                    </p>
+                    {product.mrp > product.price_mur && (
+                        <p className="text-sm text-gray-400 line-through">
+                            Rs {product.mrp.toLocaleString()}
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {/* Mobile Add to Cart Button */}
+            <button
+                onClick={handleAddToCart}
+                className="w-full mt-3 lg:hidden bg-black text-white py-2 px-4 text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 rounded"
+            >
+                <ShoppingCart size={14} />
+                Add to Cart
+            </button>
+        </div>
+    );
+});
+
+ProductCard.displayName = 'ProductCard';
+
+export default ProductCard;

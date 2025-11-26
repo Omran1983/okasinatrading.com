@@ -13,6 +13,7 @@ import {
     X,
     LogOut,
     UploadCloud,
+    Workflow,
 } from 'lucide-react';
 
 export default function AdminLayout({ children }) {
@@ -35,6 +36,7 @@ export default function AdminLayout({ children }) {
         { name: 'Marketing', href: '/admin/marketing', icon: Megaphone },
         { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
         { name: 'Media Manager', href: '/admin/media', icon: UploadCloud },
+        { name: 'Automation', href: '/admin/automation', icon: Workflow },
         { name: 'Album Import', href: '/admin/album-import', icon: UploadCloud },
         { name: 'Stock Manager', href: '/admin/stock-manager', icon: Package },
     ];

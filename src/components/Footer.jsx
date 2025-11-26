@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter } from 'lucide-react';
+import NewsletterSignup from './NewsletterSignup';
 
 export default function Footer() {
     return (
@@ -46,16 +47,7 @@ export default function Footer() {
                     <div>
                         <h4 className="text-sm font-bold uppercase tracking-widest mb-6 text-white">Stay Updated</h4>
                         <p className="text-gray-400 text-sm mb-4">Subscribe to receive updates, access to exclusive deals, and more.</p>
-                        <form className="flex flex-col space-y-3">
-                            <input
-                                type="email"
-                                placeholder="Enter your email"
-                                className="bg-[#222] text-white px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-gray-500 border border-transparent"
-                            />
-                            <button className="bg-white text-black font-bold text-xs uppercase tracking-widest px-4 py-3 hover:bg-gray-200 transition-colors">
-                                Subscribe
-                            </button>
-                        </form>
+                        <NewsletterSignup />
                     </div>
                 </div>
 

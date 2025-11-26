@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../supabase';
 import AdminLayout from '../../components/admin/AdminLayout';
+import ProductEditModal from '../../components/admin/ProductEditModal';
 import {
     Plus,
     Search,
@@ -30,6 +31,8 @@ export default function AdminProductsPage() {
         outOfStock: 0,
         drafts: 0
     });
+    const [editingProduct, setEditingProduct] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     useEffect(() => {
         fetchProducts();
@@ -56,12 +59,17 @@ export default function AdminProductsPage() {
 
     const calculateStats = (productData) => {
         const total = productData.length;
-        const inStock = productData.filter(p => p.stock > 10).length;
-        const lowStock = productData.filter(p => p.stock > 0 && p.stock <= 10).length;
-        const outOfStock = productData.filter(p => p.stock === 0).length;
+        const inStock = productData.filter(p => p.stock_qty > 10).length;
+        const lowStock = productData.filter(p => p.stock_qty > 0 && p.stock_qty <= 10).length;
+        const outOfStock = productData.filter(p => p.stock_qty === 0).length;
         const drafts = productData.filter(p => p.status === 'draft').length;
 
         setStats({ total, inStock, lowStock, outOfStock, drafts });
+    };
+
+    const handleEdit = (product) => {
+        setEditingProduct(product);
+        setShowEditModal(true);
     };
 
     const handleDelete = async (productId) => {
@@ -177,6 +185,15 @@ export default function AdminProductsPage() {
 
     return (
         <AdminLayout>
+            <ProductEditModal
+                product={editingProduct}
+                isOpen={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setEditingProduct(null);
+                }}
+                onUpdate={fetchProducts}
+            />
             <div className="space-y-6">
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -363,16 +380,16 @@ export default function AdminProductsPage() {
                                                 ${product.price?.toFixed(2)}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-600">
-                                                {product.stock}
+                                                {product.stock_qty}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${product.stock > 10
+                                                <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${product.stock_qty > 10
                                                     ? 'bg-green-100 text-green-800'
-                                                    : product.stock > 0
+                                                    : product.stock_qty > 0
                                                         ? 'bg-yellow-100 text-yellow-800'
                                                         : 'bg-red-100 text-red-800'
                                                     }`}>
-                                                    {product.stock > 10 ? 'In Stock' : product.stock > 0 ? 'Low Stock' : 'Out of Stock'}
+                                                    {product.stock_qty > 10 ? 'In Stock' : product.stock_qty > 0 ? 'Low Stock' : 'Out of Stock'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -384,6 +401,13 @@ export default function AdminProductsPage() {
                                                     >
                                                         <Eye size={18} />
                                                     </Link>
+                                                    <button
+                                                        onClick={() => handleEdit(product)}
+                                                        className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleDelete(product.id)}
                                                         className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

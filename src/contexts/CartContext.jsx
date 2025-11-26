@@ -13,13 +13,21 @@ export function CartProvider({ children }) {
     }, [cart]);
 
     const addToCart = (product) => {
+        if (!product || !product.id) {
+            console.error('Invalid product passed to addToCart:', product);
+            return;
+        }
         console.log('Adding to cart:', product);
         setCart((prev) => {
-            const existing = prev.find((item) => item.id === product.id);
+            if (!Array.isArray(prev)) return [{ ...product, quantity: 1 }];
+
+            const existing = prev.find((item) => item.id === product.id && item.selectedSize === product.selectedSize);
             if (existing) {
                 console.log('Updating existing item quantity');
                 return prev.map((item) =>
-                    item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+                    (item.id === product.id && item.selectedSize === product.selectedSize)
+                        ? { ...item, quantity: (item.quantity || 1) + 1 }
+                        : item
                 );
             }
             console.log('Adding new item');

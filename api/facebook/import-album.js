@@ -188,7 +188,7 @@ function extractHints(filename = '', albumName = '') {
 }
 
 function categorizeProduct(hints) {
-    const clothingKeywords = ['dress', 'shirt', 'pants', 'skirt', 'jacket', 'top', 'blouse', 'jeans', 'sweater'];
+    const clothingKeywords = ['dress', 'shirt', 'pants', 'trousers', 'skirt', 'jacket', 'top', 'blouse', 'jeans', 'sweater', 'churidar', 'kurti', 'lehenga', 'gown', 'suit', 'set', 'dupatta', 'saree', 'sari', 'kaftan'];
     return hints.some(h => clothingKeywords.includes(h.toLowerCase())) ? 'Clothing' : 'Accessories';
 }
 
