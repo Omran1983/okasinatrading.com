@@ -4,7 +4,7 @@ import {
     Play, Zap, Settings, Database, Tag, DollarSign, FileText,
     Package, TrendingUp, TrendingDown, Archive, Filter, Percent,
     Clock, ShoppingCart, Eye, CheckCircle, XCircle, AlertCircle,
-    Copy, PlusCircle
+    Copy, PlusCircle, Facebook, Instagram, Share2, Video
 } from 'lucide-react';
 
 const NodeWrapper = ({ children, label, icon: Icon, color = 'bg-white', selected }) => (
@@ -62,6 +62,12 @@ export const ActionNode = memo(({ data, selected }) => {
             case 'filter_stock': return Package;
             case 'filter_status': return Tag;
 
+            // Social Media
+            case 'post_facebook': return Facebook;
+            case 'post_instagram': return Instagram;
+            case 'post_tiktok': return Video;
+            case 'post_all_social': return Share2;
+
             default: return Settings;
         }
     };
@@ -74,6 +80,10 @@ export const ActionNode = memo(({ data, selected }) => {
         if (type === 'set_draft') return 'bg-orange-600';
         if (type === 'archive') return 'bg-gray-600';
         if (type?.includes('category') || type?.includes('collection')) return 'bg-indigo-600';
+        if (type === 'post_facebook') return 'bg-blue-600';
+        if (type === 'post_instagram') return 'bg-pink-600';
+        if (type === 'post_tiktok') return 'bg-gray-800';
+        if (type === 'post_all_social') return 'bg-purple-600';
         return 'bg-blue-600';
     };
 
@@ -89,4 +99,3 @@ export const ActionNode = memo(({ data, selected }) => {
         </NodeWrapper>
     );
 });
-

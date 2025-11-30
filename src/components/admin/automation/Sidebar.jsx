@@ -3,7 +3,8 @@ import {
     Zap, DollarSign, FileText, Tag, PlusCircle,
     Package, TrendingUp, TrendingDown, Archive,
     Filter, Percent, Clock, ShoppingCart, Eye,
-    CheckCircle, XCircle, AlertCircle, Copy
+    CheckCircle, XCircle, AlertCircle, Copy,
+    Facebook, Instagram, Share2, Video
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -122,6 +123,16 @@ export default function Sidebar() {
                 <div className="space-y-3">
                     <NodeCard icon={ShoppingCart} label="Change Category" description="Move to category" actionType="change_category" color="indigo" />
                     <NodeCard icon={Tag} label="Add to Collection" description="Create collection" actionType="add_collection" color="indigo" />
+                </div>
+            </div>
+            {/* Social Media Marketing */}
+            <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Social Media</h3>
+                <div className="space-y-3">
+                    <NodeCard icon={Facebook} label="Post to Facebook" description="Share to FB page" actionType="post_facebook" color="blue" />
+                    <NodeCard icon={Instagram} label="Post to Instagram" description="Share to IG" actionType="post_instagram" color="pink" />
+                    <NodeCard icon={Video} label="Post to TikTok" description="Share to TikTok" actionType="post_tiktok" color="gray" />
+                    <NodeCard icon={Share2} label="Post to All" description="Multi-platform" actionType="post_all_social" color="purple" />
                 </div>
             </div>
         </aside>

@@ -52,6 +52,18 @@ export const ComparisonProvider = ({ children }) => {
         setIsOpen(prev => !prev);
     };
 
+    const isInComparison = (productId) => {
+        return compareList.some(p => p.id === productId);
+    };
+
+    const toggleComparison = (product) => {
+        if (isInComparison(product.id)) {
+            removeFromCompare(product.id);
+        } else {
+            addToCompare(product);
+        }
+    };
+
     return (
         <ComparisonContext.Provider value={{
             compareList,
@@ -60,7 +72,9 @@ export const ComparisonProvider = ({ children }) => {
             clearCompare,
             isOpen,
             setIsOpen,
-            toggleCompare
+            toggleCompare,
+            isInComparison,
+            toggleComparison
         }}>
             {children}
         </ComparisonContext.Provider>

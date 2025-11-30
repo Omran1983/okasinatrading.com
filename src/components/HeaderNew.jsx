@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, User, Heart, Menu, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import MobileMenu from './MobileMenu';
 
 import SearchBar from './SearchBar';
 
-export default function Header() {
+// HeaderNew component with mobile menu and search
+export default function HeaderNew() {
     const { cart } = useCart();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -13,7 +15,7 @@ export default function Header() {
     const totalItems = Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 1), 0) : 0;
 
     return (
-        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 h-20">
+        <header className="sticky top-0 z-[70] bg-white/80 backdrop-blur-md border-b border-gray-100 h-20">
             <div className="container mx-auto px-4 h-full flex items-center justify-between">
                 {/* Logo */}
                 <Link to="/" className="text-3xl font-serif font-bold text-gray-900 tracking-widest z-50">
@@ -55,28 +57,17 @@ export default function Header() {
 
                     {/* Mobile Menu Button */}
                     <button
-                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        onClick={() => setIsMenuOpen(true)}
                         className="lg:hidden hover:text-black focus:outline-none z-50"
                         aria-label="Toggle Menu"
                     >
-                        {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        <Menu size={24} />
                     </button>
                 </div>
             </div>
 
-            {/* Mobile Menu Overlay */}
-            {isMenuOpen && (
-                <div className="lg:hidden fixed inset-0 bg-white z-40 pt-24 px-6">
-                    <nav className="flex flex-col gap-6 text-xl font-medium">
-                        <Link to="/" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-600">Home</Link>
-                        <Link to="/shop?category=clothing" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-600">Clothing</Link>
-                        <Link to="/shop?category=accessories" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-600">Accessories</Link>
-                        <Link to="/cart" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-600">Cart ({totalItems})</Link>
-                        <Link to="/wishlist" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-600">Wishlist</Link>
-                        <Link to="/account" onClick={() => setIsMenuOpen(false)} className="hover:text-gray-600">Account</Link>
-                    </nav>
-                </div>
-            )}
+            {/* Premium Mobile Menu */}
+            <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
         </header>
     );
 }

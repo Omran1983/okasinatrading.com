@@ -15,9 +15,9 @@ export default function InventoryAlerts() {
         try {
             const { data, error } = await supabase
                 .from('products')
-                .select('id, name, stock, image_url')
-                .lt('stock', 5)
-                .order('stock', { ascending: true })
+                .select('id, name, stock_qty, image_url')
+                .lt('stock_qty', 5)
+                .order('stock_qty', { ascending: true })
                 .limit(5);
 
             if (error) throw error;
@@ -71,7 +71,7 @@ export default function InventoryAlerts() {
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
                             <p className="text-xs text-red-600 font-medium">
-                                Only {product.stock} left
+                                Only {product.stock_qty} left
                             </p>
                         </div>
                         <Link

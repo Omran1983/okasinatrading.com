@@ -31,29 +31,24 @@ export default function MediaManagerPage() {
                 const skuMatch = filename.match(/^([A-Z0-9-]+)/i);
                 const sku = skuMatch ? skuMatch[1] : 'UNKNOWN';
 
-                // Generate storage path: products/{sku}/{filename}
-                const storagePath = `products/${sku}/${filename}`;
+                // Upload to Cloudinary via our backend (Auto-Enhanced!)
+                const formData = new FormData();
+                formData.append('file', file);
 
-                // Upload to Supabase Storage
-                const { data, error: uploadError } = await supabase.storage
-                    .from('product-images')
-                    .upload(storagePath, file, {
-                        cacheControl: '3600',
-                        upsert: true // Overwrite if exists
-                    });
+                const response = await fetch('http://localhost:3001/api/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                if (uploadError) throw uploadError;
+                if (!response.ok) throw new Error('Upload failed');
 
-                // Get public URL
-                const { data: { publicUrl } } = supabase.storage
-                    .from('product-images')
-                    .getPublicUrl(storagePath);
+                const data = await response.json();
 
                 results.push({
                     sku,
                     filename,
-                    path: storagePath,
-                    url: publicUrl,
+                    path: data.public_id,
+                    url: data.url, // This is the AI Enhanced URL
                     size: file.size,
                     type: file.type
                 });

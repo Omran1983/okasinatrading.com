@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { supabase } from '../../supabase';
+import { API_URL } from '../../api';
 
 export default function ProductEditModal({ product, isOpen, onClose, onUpdate }) {
     const [formData, setFormData] = useState({
@@ -55,18 +56,35 @@ export default function ProductEditModal({ product, isOpen, onClose, onUpdate })
                 sizes: formData.sizes.split(',').map(s => s.trim()).filter(s => s)
             };
 
-            const { error } = await supabase
-                .from('products')
-                .update(updateData)
-                .eq('id', product.id);
+            let response;
+            if (product?.id) {
+                // Update existing product
+                response = await fetch(`${API_URL}/api/update-product`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: product.id, ...updateData })
+                });
+            } else {
+                // Create new product
+                response = await fetch(`${API_URL}/api/create-product`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+            }
 
-            if (error) throw error;
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to save product');
+            }
 
             onUpdate();
             onClose();
+            alert(product?.id ? 'Product updated successfully' : 'Product created successfully');
         } catch (error) {
-            console.error('Error updating product:', error);
-            alert('Failed to update product: ' + error.message);
+            console.error('Error saving product:', error);
+            alert('Failed to save product: ' + error.message);
         } finally {
             setSaving(false);
         }
@@ -78,7 +96,7 @@ export default function ProductEditModal({ product, isOpen, onClose, onUpdate })
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-gray-900">Edit Product</h2>
+                    <h2 className="text-xl font-bold text-gray-900">{product ? 'Edit Product' : 'Add New Product'}</h2>
                     <button
                         onClick={onClose}
                         className="text-gray-400 hover:text-gray-600 transition-colors"

@@ -15,8 +15,10 @@ import {
     Package,
     AlertCircle,
     CheckCircle,
-    Facebook
+    Facebook,
+    Zap
 } from 'lucide-react';
+import { API_URL } from '../../api';
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState([]);
@@ -33,6 +35,11 @@ export default function AdminProductsPage() {
     });
     const [editingProduct, setEditingProduct] = useState(null);
     const [showEditModal, setShowEditModal] = useState(false);
+
+    // Bulk Selection State
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [showBulkCategoryModal, setShowBulkCategoryModal] = useState(false);
+    const [newCategory, setNewCategory] = useState('');
 
     useEffect(() => {
         fetchProducts();
@@ -76,21 +83,28 @@ export default function AdminProductsPage() {
         if (!confirm('Are you sure you want to delete this product?')) return;
 
         try {
-            const { error } = await supabase
-                .from('products')
-                .delete()
-                .eq('id', productId);
+            console.log('Attempting to delete product:', productId);
 
-            if (error) throw error;
+            const response = await fetch(`${API_URL}/api/delete-product`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId })
+            });
+
+            const result = await response.json();
+            console.log('Delete result:', result);
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Delete failed');
+            }
 
             fetchProducts();
+            alert('Product deleted successfully');
         } catch (error) {
             console.error('Error deleting product:', error);
-            alert('Failed to delete product');
+            alert('Failed to delete product: ' + error.message);
         }
     };
-
-
 
     const handleExport = async () => {
         try {
@@ -183,8 +197,109 @@ export default function AdminProductsPage() {
 
     const categories = [...new Set(products.map(p => p.category))];
 
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedProducts(filteredProducts.map(p => p.id));
+        } else {
+            setSelectedProducts([]);
+        }
+    };
+
+    const handleSelectProduct = (id) => {
+        if (selectedProducts.includes(id)) {
+            setSelectedProducts(selectedProducts.filter(pid => pid !== id));
+        } else {
+            setSelectedProducts([...selectedProducts, id]);
+        }
+    };
+
+    const handleBulkCategoryUpdate = async () => {
+        if (!newCategory) return alert('Please select a category');
+
+        try {
+            setLoading(true);
+            console.log('Updating categories for:', selectedProducts);
+
+            const response = await fetch(`${API_URL}/api/update-category`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    productIds: selectedProducts,
+                    category: newCategory
+                })
+            });
+
+            const result = await response.json();
+            console.log('Update result:', result);
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Update failed');
+            }
+
+            if (result.count === 0) {
+                alert('Update failed: No products modified. Check permissions.');
+                return;
+            }
+
+            alert(result.message);
+            setShowBulkCategoryModal(false);
+            setSelectedProducts([]);
+            fetchProducts();
+        } catch (error) {
+            console.error('Error updating categories:', error);
+            alert('Failed to update categories: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <AdminLayout>
+            {/* Bulk Category Modal */}
+            {showBulkCategoryModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-2xl w-96">
+                        <h3 className="text-lg font-bold mb-4">Bulk Change Category</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Updating {selectedProducts.length} selected products.
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                New Category
+                            </label>
+                            <select
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Select Category</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Accessories">Accessories</option>
+                                <option value="Shoes">Shoes</option>
+                                <option value="Bags">Bags</option>
+                                <option value="Jewelry">Jewelry</option>
+                                <option value="New Arrivals">New Arrivals</option>
+                                <option value="Clearance">Clearance</option>
+                            </select>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowBulkCategoryModal(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleBulkCategoryUpdate}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                Update Products
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <ProductEditModal
                 product={editingProduct}
                 isOpen={showEditModal}
@@ -249,8 +364,8 @@ export default function AdminProductsPage() {
                 {/* Actions Bar */}
                 <div className="bg-white rounded-xl p-6 border border-gray-200">
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                        <div className="flex-1 w-full md:w-auto">
-                            <div className="relative">
+                        <div className="flex-1 w-full md:w-auto flex items-center gap-4">
+                            <div className="relative flex-1 max-w-md">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                                 <input
                                     type="text"
@@ -260,6 +375,20 @@ export default function AdminProductsPage() {
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
+
+                            {selectedProducts.length > 0 && (
+                                <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
+                                    <span className="text-sm font-medium text-blue-700">
+                                        {selectedProducts.length} selected
+                                    </span>
+                                    <button
+                                        onClick={() => setShowBulkCategoryModal(true)}
+                                        className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors"
+                                    >
+                                        Change Category
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex flex-wrap gap-3 w-full md:w-auto">
@@ -308,6 +437,26 @@ export default function AdminProductsPage() {
                                 <Upload size={20} />
                                 Bulk CSV Import
                             </Link>
+
+                            <button
+                                onClick={() => {
+                                    setEditingProduct(null);
+                                    setShowEditModal(true);
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                            >
+                                <Plus size={20} />
+                                Add Product
+                            </button>
+
+                            <Link
+                                to="/admin/automation"
+                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                                title="Use Automation for Bulk Edits & Promos"
+                            >
+                                <Zap size={20} />
+                                Bulk Actions
+                            </Link>
                         </div>
                     </div>
                 </div>
@@ -318,6 +467,14 @@ export default function AdminProductsPage() {
                         <table className="w-full">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
+                                    <th className="px-3 py-4 text-left w-12">
+                                        <input
+                                            type="checkbox"
+                                            onChange={handleSelectAll}
+                                            checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+                                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                        />
+                                    </th>
                                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Product
                                     </th>
@@ -344,19 +501,27 @@ export default function AdminProductsPage() {
                             <tbody className="divide-y divide-gray-200">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                                             Loading products...
                                         </td>
                                     </tr>
                                 ) : filteredProducts.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                        <td colSpan="8" className="px-6 py-12 text-center text-gray-500">
                                             No products found
                                         </td>
                                     </tr>
                                 ) : (
                                     filteredProducts.map((product) => (
-                                        <tr key={product.id} className="hover:bg-gray-50 transition-colors">
+                                        <tr key={product.id} className={`hover:bg-gray-50 transition-colors ${selectedProducts.includes(product.id) ? 'bg-blue-50' : ''}`}>
+                                            <td className="px-3 py-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedProducts.includes(product.id)}
+                                                    onChange={() => handleSelectProduct(product.id)}
+                                                    className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <img

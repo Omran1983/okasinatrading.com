@@ -24,7 +24,7 @@ import MediaManagerPage from './pages/admin/MediaManagerPage';
 import AdminCouponsPage from './pages/admin/AdminCouponsPage';
 import AdminAutomationPage from './pages/admin/AdminAutomationPage';
 import StockManagerPage from './pages/StockManagerPage';
-import Header from './components/Header';
+import HeaderNew from './components/HeaderNew';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -49,7 +49,7 @@ export default function App() {
                                         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded-md">
                                             Skip to content
                                         </a>
-                                        <Header />
+                                        <HeaderNew />
                                         <main id="main-content" className="flex-grow">
                                             <Breadcrumbs />
                                             <Routes>

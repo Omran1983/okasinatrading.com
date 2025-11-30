@@ -4,10 +4,14 @@ import { ShoppingCart, Eye } from 'lucide-react';
 import LazyImage from './common/LazyImage';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
+import { useComparison } from '../contexts/ComparisonContext';
 
 const ProductCard = memo(({ product, onQuickView }) => {
     const { addToCart } = useCart();
     const { addToast } = useToast();
+    const { isInComparison, toggleComparison } = useComparison();
+
+    const isCompared = isInComparison(product.id);
 
     const handleAddToCart = (e) => {
         e.preventDefault();
@@ -24,10 +28,28 @@ const ProductCard = memo(({ product, onQuickView }) => {
         }
     };
 
+    const handleToggleCompare = (e) => {
+        e.stopPropagation();
+        toggleComparison(product);
+    };
+
     return (
         <div className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
             {/* Image Container */}
             <div className="aspect-[3/4] w-full overflow-hidden bg-gray-100 relative">
+                {/* Compare Checkbox */}
+                <div className="absolute top-2 left-2 z-10">
+                    <label className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-2 py-1.5 rounded-full shadow-sm cursor-pointer hover:bg-white transition-colors">
+                        <input
+                            type="checkbox"
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-black focus:ring-black cursor-pointer"
+                            checked={isCompared}
+                            onChange={handleToggleCompare}
+                        />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-700">Compare</span>
+                    </label>
+                </div>
+
                 <Link to={`/product/${product.id}`}>
                     <LazyImage
                         src={product.image_url || product.image || 'https://via.placeholder.com/400x600?text=No+Image'}
@@ -58,7 +80,7 @@ const ProductCard = memo(({ product, onQuickView }) => {
 
                 {/* Badges */}
                 {product.stock_qty < 5 && product.stock_qty > 0 && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                    <span className="absolute top-12 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
                         Low Stock
                     </span>
                 )}
