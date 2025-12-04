@@ -19,7 +19,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'react-router-dom'],
           ui: ['lucide-react', 'framer-motion', '@heroicons/react'],
           supabase: ['@supabase/supabase-js'],
-          utils: ['axios', 'date-fns', 'lodash']
+          charts: ['recharts']
         }
       }
     },
