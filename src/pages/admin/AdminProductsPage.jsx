@@ -253,6 +253,43 @@ export default function AdminProductsPage() {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (!confirm(`Are you sure you want to delete ${selectedProducts.length} products? This cannot be undone.`)) return;
+
+        try {
+            setLoading(true);
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const productId of selectedProducts) {
+                try {
+                    const response = await fetch(`${API_URL}/api/delete-product`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId })
+                    });
+
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        failCount++;
+                    }
+                } catch (err) {
+                    failCount++;
+                }
+            }
+
+            alert(`Deleted ${successCount} products successfully.${failCount > 0 ? ` ${failCount} failed.` : ''}`);
+            setSelectedProducts([]);
+            fetchProducts();
+        } catch (error) {
+            console.error('Error deleting products:', error);
+            alert('Failed to delete products: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <AdminLayout>
             {/* Bulk Category Modal */}
@@ -386,6 +423,13 @@ export default function AdminProductsPage() {
                                         className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors"
                                     >
                                         Change Category
+                                    </button>
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 transition-colors flex items-center gap-1"
+                                    >
+                                        <Trash2 size={12} />
+                                        Delete
                                     </button>
                                 </div>
                             )}

@@ -5,7 +5,7 @@ const CurrencyContext = createContext();
 export const useCurrency = () => useContext(CurrencyContext);
 
 export const CurrencyProvider = ({ children }) => {
-    const [currency, setCurrency] = useState('USD');
+    const [currency, setCurrency] = useState('MUR'); // Default to MUR (Mauritius Rupees)
     const [isMauritius, setIsMauritius] = useState(false);
     const [loading, setLoading] = useState(true);
 
