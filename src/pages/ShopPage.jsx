@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductList from '../components/ProductList';
 import ProductFilters from '../components/shop/ProductFilters';
+import { Grid, List } from 'lucide-react';
 
 export default function ShopPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+    const [viewMode, setViewMode] = useState(() => {
+        return localStorage.getItem('productViewMode') || 'grid';
+    });
 
     // Initialize filters from URL
     const [filters, setFilters] = useState({
@@ -25,6 +29,12 @@ export default function ShopPage() {
         setSearchParams(params);
     }, [filters, setSearchParams]);
 
+    // Save view mode preference
+    const handleViewModeChange = (mode) => {
+        setViewMode(mode);
+        localStorage.setItem('productViewMode', mode);
+    };
+
     // Helper to format title
     const title = filters.search
         ? `Search results for "${filters.search}"`
@@ -40,7 +50,31 @@ export default function ShopPage() {
                 <div className="flex items-baseline justify-between border-b border-gray-200 pb-6">
                     <h1 className="text-4xl font-serif font-bold text-gray-900">{title}</h1>
 
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-4">
+                        {/* View Mode Toggle */}
+                        <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                            <button
+                                onClick={() => handleViewModeChange('grid')}
+                                className={`p-2 rounded transition-colors ${viewMode === 'grid'
+                                        ? 'bg-white text-black shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                title="Grid View"
+                            >
+                                <Grid size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleViewModeChange('list')}
+                                className={`p-2 rounded transition-colors ${viewMode === 'list'
+                                        ? 'bg-white text-black shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                    }`}
+                                title="List View"
+                            >
+                                <List size={20} />
+                            </button>
+                        </div>
+
                         <button
                             type="button"
                             className="-m-2 ml-4 p-2 text-gray-400 hover:text-gray-500 sm:ml-6 lg:hidden"
@@ -66,7 +100,7 @@ export default function ShopPage() {
 
                         {/* Product Grid */}
                         <div className="lg:col-span-3">
-                            <ProductList filters={filters} />
+                            <ProductList filters={filters} viewMode={viewMode} />
                         </div>
                     </div>
                 </section>

@@ -7,7 +7,7 @@ import { useToast } from '../contexts/ToastContext';
 import { useComparison } from '../contexts/ComparisonContext';
 import { useCurrency } from '../contexts/CurrencyContext';
 
-const ProductCard = memo(({ product, onQuickView }) => {
+const ProductCard = memo(({ product, onQuickView, viewMode = 'grid' }) => {
     const { addToCart } = useCart();
     const { addToast } = useToast();
     const { isInComparison, toggleComparison } = useComparison();
@@ -35,6 +35,93 @@ const ProductCard = memo(({ product, onQuickView }) => {
         toggleComparison(product);
     };
 
+    // List View Layout
+    if (viewMode === 'list') {
+        return (
+            <div className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex gap-6 p-4">
+                {/* Image */}
+                <div className="w-48 h-64 flex-shrink-0 overflow-hidden bg-gray-100 relative rounded">
+                    <div className="absolute top-2 left-2 z-10">
+                        <label className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-2 py-1.5 rounded-full shadow-sm cursor-pointer hover:bg-white transition-colors">
+                            <input
+                                type="checkbox"
+                                className="h-3.5 w-3.5 rounded border-gray-300 text-black focus:ring-black cursor-pointer"
+                                checked={isCompared}
+                                onChange={handleToggleCompare}
+                            />
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-700">Compare</span>
+                        </label>
+                    </div>
+
+                    <Link to={`/product/${product.id}`}>
+                        <LazyImage
+                            src={product.image_url || product.image || 'https://via.placeholder.com/400x600?text=No+Image'}
+                            alt={product.name}
+                            className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-110"
+                        />
+                    </Link>
+
+                    {product.stock_qty < 5 && product.stock_qty > 0 && (
+                        <span className="absolute bottom-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                            Low Stock
+                        </span>
+                    )}
+                    {product.mrp > product.price_mur && (
+                        <span className="absolute top-2 right-2 bg-[#d4af37] text-white text-[10px] font-bold px-2 py-1 uppercase tracking-wider">
+                            {Math.round(((product.mrp - product.price_mur) / product.mrp) * 100)}% OFF
+                        </span>
+                    )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 flex flex-col justify-between">
+                    <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">{product.category}</p>
+                        <h3 className="text-xl font-medium text-gray-900 mb-3">
+                            <Link to={`/product/${product.id}`} className="hover:text-[#d4af37] transition-colors">
+                                {product.name}
+                            </Link>
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                            {product.description || 'Premium quality product from our collection.'}
+                        </p>
+                        <div className="flex items-baseline gap-2">
+                            <p className="text-2xl font-bold text-gray-900">
+                                {formatPrice(product.price)}
+                            </p>
+                            {product.mrp > product.price_mur && (
+                                <p className="text-lg text-gray-400 line-through">
+                                    {formatPrice(product.mrp)}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 mt-4">
+                        <button
+                            onClick={handleAddToCart}
+                            className="flex-1 bg-black text-white py-3 px-6 text-sm font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <ShoppingCart size={16} />
+                            Add to Cart
+                        </button>
+                        {onQuickView && (
+                            <button
+                                onClick={handleQuickView}
+                                className="bg-gray-100 text-black py-3 px-6 text-sm font-bold uppercase tracking-wider hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                            >
+                                <Eye size={16} />
+                                Quick View
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Grid View Layout (default)
     return (
         <div className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
             {/* Image Container */}

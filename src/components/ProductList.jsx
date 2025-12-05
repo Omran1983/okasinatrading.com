@@ -4,7 +4,7 @@ import ProductCard from './ProductCard';
 import { ProductGridSkeleton } from './common/SkeletonLoader';
 import ProductQuickView from './product/ProductQuickView';
 
-export default function ProductList({ filters }) {
+export default function ProductList({ filters, viewMode = 'grid' }) {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [quickViewProduct, setQuickViewProduct] = useState(null);
@@ -100,12 +100,16 @@ export default function ProductList({ filters }) {
 
     return (
         <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className={viewMode === 'grid'
+                ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'
+                : 'flex flex-col gap-4'
+            }>
                 {filteredProducts.map((product) => (
                     <ProductCard
                         key={product.id}
                         product={product}
                         onQuickView={handleQuickView}
+                        viewMode={viewMode}
                     />
                 ))}
             </div>
