@@ -149,6 +149,9 @@ app.post('/api/create-product', async (req, res) => {
 app.post('/api/update-product', async (req, res) => {
   try {
     const { id, ...updateData } = req.body;
+
+    console.log('Update product request:', { id, fields: Object.keys(updateData) });
+
     const { data, error } = await supabaseAdmin
       .from('products')
       .update(updateData)
@@ -156,10 +159,16 @@ app.post('/api/update-product', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase update error:', error);
+      throw error;
+    }
+
+    console.log('Product updated successfully:', id);
     res.json({ success: true, product: data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Update product error:', error);
+    res.status(500).json({ error: error.message, details: error });
   }
 });
 
@@ -179,15 +188,18 @@ app.post('/api/stylist-chat', async (req, res) => {
 
     // 2. Call Gemini API (using fetch to avoid adding new dependencies)
     // If GOOGLE_AI_KEY is not set, return a fallback response
-    if (!process.env.GOOGLE_AI_KEY) {
-      console.warn('GOOGLE_AI_KEY not set. Returning fallback response.');
+    if (!process.env.GOOGLE_AI_KEY && !process.env.VITE_GEMINI_API_KEY) {
+      console.warn('GOOGLE_AI_KEY or VITE_GEMINI_API_KEY not set. Returning fallback response.');
       return res.json({
         replyText: "I can certainly help with that! Our collection features exquisite designs. (Note: AI Key missing, this is a placeholder response).",
         suggestedProductIds: []
       });
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GOOGLE_AI_KEY}`, {
+    const apiKey = process.env.GOOGLE_AI_KEY || process.env.VITE_GEMINI_API_KEY;
+
+    // Updated to use gemini-1.5-flash (latest stable model)
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -200,6 +212,7 @@ app.post('/api/stylist-chat', async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('Gemini API Error:', data);
       throw new Error(data.error?.message || 'Gemini API Error');
     }
 
@@ -224,7 +237,7 @@ app.post('/api/stylist-chat', async (req, res) => {
 
   } catch (error) {
     console.error('Stylist Chat Error:', error);
-    res.status(500).json({ error: 'Failed to process chat request' });
+    res.status(500).json({ error: 'Failed to process chat request', details: error.message });
   }
 });
 
