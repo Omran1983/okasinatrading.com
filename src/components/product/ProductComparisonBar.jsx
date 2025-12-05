@@ -27,6 +27,12 @@ const ProductComparisonBar = () => {
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-4">
                         <h3 className="text-lg font-bold text-gray-900">Compare Products ({compareList.length}/4)</h3>
+                        <Link
+                            to="/compare"
+                            className="text-sm bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+                        >
+                            View Comparison
+                        </Link>
                         <button
                             onClick={clearCompare}
                             className="text-sm text-red-600 hover:text-red-700 underline"

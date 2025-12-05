@@ -65,7 +65,14 @@ export default function ProductPage() {
     if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     if (!product) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
 
-    const sizes = product.sizes ? (typeof product.sizes === 'string' ? product.sizes.split(',') : product.sizes).map(s => s.trim()) : [];
+    // Default sizes for products without sizes defined
+    const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL'];
+    const rawSizes = product.sizes ? (typeof product.sizes === 'string' ? product.sizes.split(',') : product.sizes).map(s => s.trim()) : [];
+    const sizes = rawSizes.length > 0 ? rawSizes : (product.category === 'Accessories' ? ['One Size'] : DEFAULT_SIZES);
+
+    // Calculate discount if applicable
+    const hasDiscount = product.original_price && product.original_price > product.price;
+    const discountPercent = hasDiscount ? Math.round(((product.original_price - product.price) / product.original_price) * 100) : 0;
 
     return (
         <div className="min-h-screen bg-white py-12">
@@ -129,46 +136,60 @@ export default function ProductPage() {
                             <span className="ml-2 text-sm text-gray-500">(See Reviews Below)</span>
                         </div>
 
-                        <p className="text-2xl font-medium text-gray-900 mb-8">
-                            {formatPrice(product.price)}
-                        </p>
+                        <div className="mb-8">
+                            {hasDiscount ? (
+                                <div className="flex items-center gap-3">
+                                    <p className="text-2xl font-bold text-red-600">
+                                        {formatPrice(product.price)}
+                                    </p>
+                                    <p className="text-xl text-gray-400 line-through">
+                                        {formatPrice(product.original_price)}
+                                    </p>
+                                    <span className="bg-red-100 text-red-800 text-sm font-bold px-3 py-1 rounded">
+                                        -{discountPercent}%
+                                    </span>
+                                </div>
+                            ) : (
+                                <p className="text-2xl font-medium text-gray-900">
+                                    {formatPrice(product.price)}
+                                </p>
+                            )}
+                        </div>
 
                         {/* Tabbed Content */}
                         <ProductTabs product={product} />
 
-                        {/* Size Selector */}
-                        {sizes.length > 0 && (
-                            <div className="mb-8 border border-gray-200 p-4 bg-gray-50">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-base font-bold uppercase tracking-widest">Select Size</h3>
-                                    <button
-                                        onClick={() => setShowSizeGuide(true)}
-                                        className="text-xs text-gray-500 underline flex items-center hover:text-black"
-                                    >
-                                        <Ruler size={14} className="mr-1" /> Size Guide
-                                    </button>
-                                </div>
-                                {selectedSize && (
-                                    <div className="mb-3 text-sm text-gray-700">
-                                        <span className="font-medium">Selected:</span> <span className="font-bold text-black">{selectedSize}</span>
-                                    </div>
-                                )}
-                                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                                    {sizes.map((size) => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`min-w-[60px] h-14 px-3 flex items-center justify-center border-2 text-sm font-bold ${selectedSize === size
-                                                ? 'border-black bg-black text-white'
-                                                : 'border-gray-300 text-gray-700 hover:border-black bg-white'
-                                                } transition-all duration-200 hover:scale-105`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
-                                </div>
+                        {/* Size Selector - Always shown with default sizes if none specified */}
+                        <div className="mb-8 border border-gray-200 p-4 bg-gray-50">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-base font-bold uppercase tracking-widest">Select Size</h3>
+                                <button
+                                    onClick={() => setShowSizeGuide(true)}
+                                    className="text-xs text-gray-500 underline flex items-center hover:text-black"
+                                >
+                                    <Ruler size={14} className="mr-1" /> Size Guide
+                                </button>
                             </div>
-                        )}
+                            {selectedSize && (
+                                <div className="mb-3 text-sm text-gray-700">
+                                    <span className="font-medium">Selected:</span> <span className="font-bold text-black">{selectedSize}</span>
+                                </div>
+                            )}
+                            <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                                {sizes.map((size) => (
+                                    <button
+                                        key={size}
+                                        onClick={() => setSelectedSize(size)}
+                                        className={`min-w-[60px] h-14 px-3 flex items-center justify-center border-2 text-sm font-bold ${selectedSize === size
+                                            ? 'border-black bg-black text-white'
+                                            : 'border-gray-300 text-gray-700 hover:border-black bg-white'
+                                            } transition-all duration-200 hover:scale-105`}
+                                    >
+                                        {size}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
                         {/* Actions */}
                         <div className="flex flex-col gap-4 mb-8">

@@ -25,6 +25,7 @@ import AdminCouponsPage from './pages/admin/AdminCouponsPage';
 import AdminAutomationPage from './pages/admin/AdminAutomationPage';
 import AdminAiEmployeesPage from './pages/admin/AdminAiEmployeesPage';
 import StockManagerPage from './pages/StockManagerPage';
+import ComparePage from './pages/ComparePage';
 import HeaderNew from './components/HeaderNew';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -71,6 +72,7 @@ export default function App() {
                                                     <Route path="/feedback" element={<FeedbackPage />} />
                                                     <Route path="/wishlist" element={<WishlistPage />} />
                                                     <Route path="/account" element={<MyAccountPage />} />
+                                                    <Route path="/compare" element={<ComparePage />} />
 
                                                     {/* Protected Admin Routes */}
                                                     <Route path="/admin" element={<ProtectedRoute><AdminDashboardPage /></ProtectedRoute>} />

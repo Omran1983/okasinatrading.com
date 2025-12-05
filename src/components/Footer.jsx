@@ -25,10 +25,10 @@ export default function Footer() {
                     <div>
                         <h4 className="text-sm font-bold uppercase tracking-widest mb-6 text-white">Shop</h4>
                         <ul className="space-y-3 text-sm text-gray-400">
-                            <li><Link to="/new-arrivals" className="hover:text-white transition-colors">New Arrivals</Link></li>
-                            <li><Link to="/shop?category=clothing" className="hover:text-white transition-colors">Best Sellers</Link></li>
-                            <li><Link to="/shop?category=accessories" className="hover:text-white transition-colors">Accessories</Link></li>
-                            <li><Link to="/shop?category=sale" className="hover:text-white transition-colors">Sale</Link></li>
+                            <li><Link to="/new-arrivals" className="hover:text-white transition-colors block">New Arrivals</Link></li>
+                            <li><Link to="/shop?category=clothing" className="hover:text-white transition-colors block">Best Sellers</Link></li>
+                            <li><Link to="/shop?category=Accessories" className="hover:text-white transition-colors block">Accessories</Link></li>
+                            <li><Link to="/shop?sale=true" className="hover:text-white transition-colors block">Sale</Link></li>
                         </ul>
                     </div>
 
