@@ -308,6 +308,23 @@ app.post('/api/log', async (req, res) => {
   res.json({ success: true });
 });
 
+// --- Facebook Album Import Stubs ---
+app.get('/api/facebook/list-albums', async (req, res) => {
+  res.status(501).json({
+    error: 'Facebook Album Import is not configured',
+    message: 'Please use the Media Manager instead to upload images directly.',
+    recommendation: 'Go to Admin → Media Manager for a simpler image upload solution.'
+  });
+});
+
+app.post('/api/facebook/import-album', async (req, res) => {
+  res.status(501).json({
+    error: 'Facebook Album Import is not configured',
+    message: 'Please use the Media Manager instead to upload images directly.',
+    recommendation: 'Go to Admin → Media Manager for a simpler image upload solution.'
+  });
+});
+
 // --- Email Service ---
 app.post('/api/send-email', async (req, res) => {
   // ... (Keep existing email logic or stub)
